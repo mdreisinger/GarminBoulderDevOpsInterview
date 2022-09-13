@@ -39,9 +39,3 @@ I have broken the requirements down into the following list of acceptance criter
 (_) All assumptions must be documented.
 
 (_) Extra credit: Determine which geographic regions the API is expected to function in. Create a list of proxy servers (configurable), to hit the API from so that all of the expected geographic regions are exercised by the monitor. Incorporate the design decison that answers the question: Are Garmin support email addresses region-specific?
-
-
-
-# Design
-- Do not use a docker container; application must be run in foreground on the command line to satisfy the Ctrl-C requirement.
-- I will use test driven development.

@@ -1,5 +1,6 @@
 boto3
 requests
+mysql-connector-python
 
 # Testing
 pytest

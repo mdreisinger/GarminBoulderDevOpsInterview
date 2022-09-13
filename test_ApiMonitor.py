@@ -28,7 +28,8 @@ bad_resp.json.return_value = bad_json
 @patch('ApiMonitor.requests')
 def test_monitorConsidersAnyResponseCodeOtherThan200ToBeAFailure(mock_requests):
     # Arrange
-    monitor = ApiMonitor(url)
+    db = MagicMock()
+    monitor = ApiMonitor(url, db)
     mock_request_response = MagicMock()
     mock_request_response.status_code = 666
     mock_request_response.json.return_value = good_json
@@ -43,7 +44,8 @@ def test_monitorConsidersAnyResponseCodeOtherThan200ToBeAFailure(mock_requests):
 @patch('ApiMonitor.requests')
 def test_monitorConsidersAnyReturnStatusOtherThanOkToBeAFailure(mock_requests):
     # Arrange
-    monitor = ApiMonitor(url)
+    db = MagicMock()
+    monitor = ApiMonitor(url, db)
     mock_request_response = MagicMock()
     mock_request_response.status_code = 200
     mock_request_response.json.return_value = bad_json
@@ -59,7 +61,8 @@ def test_monitorConsidersAnyReturnStatusOtherThanOkToBeAFailure(mock_requests):
         side_effect=[good_resp, good_resp, good_resp]+[bad_resp for _ in range(100)])
 def test_outageEmailIsTriggeredAppropriately(mock_requests):
     # Arrange
-    monitor = ApiMonitor(url, sleep_time=0.1)
+    db = MagicMock()
+    monitor = ApiMonitor(url, db, sleep_time=0.1)
     email_service = MagicMock()
     monitor.email_service = email_service
 
@@ -71,13 +74,14 @@ def test_outageEmailIsTriggeredAppropriately(mock_requests):
     thread.join()
     
     # Assert
-    email_service.assert_called_once_with(monitor.recipient, monitor.fail_message, monitor.fail_message)
+    email_service.assert_called_once_with(monitor.recipient, monitor.fail_subject, monitor.build_outage_body())
 
 @patch('ApiMonitor.requests.get', 
         side_effect=[bad_resp, bad_resp, bad_resp]+[good_resp for _ in range(100)])
 def test_recoveryEmailIsTriggeredAppropriately(mock_requests):
     # Arrange
-    monitor = ApiMonitor(url, sleep_time=0.1)
+    db = MagicMock()
+    monitor = ApiMonitor(url, db, sleep_time=0.1)
     email_service = MagicMock()
     monitor.email_service = email_service
 
@@ -90,5 +94,8 @@ def test_recoveryEmailIsTriggeredAppropriately(mock_requests):
     
     # Assert
     email_service.assert_has_calls(
-        [mock.call(monitor.recipient, monitor.fail_message, monitor.fail_message), 
-         mock.call(monitor.recipient, monitor.recovery_message, monitor.recovery_message)])
+        [mock.call(monitor.recipient, monitor.fail_subject, monitor.build_outage_body()), 
+         mock.call(monitor.recipient, monitor.recovery_subject, monitor.build_recovery_body())])
+
+
+# TODO more tests: test the database insertion / metrics stuff
