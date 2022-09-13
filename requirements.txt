@@ -1,2 +1,5 @@
-pytest
+boto3
 requests
+
+# Testing
+pytest

@@ -10,9 +10,9 @@ logging.getLogger().setLevel(logging.INFO)
 
 
 class ApiMonitor:
-    def __init__(self, url, support_email="mike.dreisinger95@gmail.com", sleep_time=5):
+    def __init__(self, url, support_email="testymctester653@gmail.com", sleep_time=5):
         self.url = url
-        self.email_address = support_email
+        self.recipient = support_email
         self.fail_message = f"URGENT: API ({self.url}) is down!"
         self.recovery_message = f"API ({self.url}) has recovered from an outage!"
         self.sleep_time=sleep_time
@@ -62,10 +62,10 @@ class ApiMonitor:
                 if consecutive_changes >= 2:
                     last_state = status
                     if status:
-                        self.send_email(self.email_service, self.email_address, self.recovery_message)
+                        self.send_email(self.email_service, self.recipient, self.recovery_message, self.recovery_message)
                         logging.info("API recovered from outage.")
                     else:
-                        self.send_email(self.email_service, self.email_address, self.fail_message)
+                        self.send_email(self.email_service, self.recipient, self.fail_message, self.fail_message)
                     consecutive_changes = 0
 
                 time.sleep(self.sleep_time)
@@ -73,8 +73,8 @@ class ApiMonitor:
             logging.info("Bye")
             sys.exit()
 
-    def send_email(self, e_service, email_address, body):
-        e_service(email_address, body)
+    def send_email(self, e_service, recipient, subject, body_text):
+        e_service(recipient, subject, body_text)
 
 
 if __name__ == "__main__":

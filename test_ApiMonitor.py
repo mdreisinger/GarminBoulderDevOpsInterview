@@ -56,7 +56,7 @@ def test_monitorConsidersAnyReturnStatusOtherThanOkToBeAFailure(mock_requests):
     assert health == False
 
 @patch('ApiMonitor.requests.get', 
-        side_effect=[good_resp, good_resp, good_resp, bad_resp, bad_resp, bad_resp, bad_resp, bad_resp])
+        side_effect=[good_resp, good_resp, good_resp]+[bad_resp for _ in range(100)])
 def test_outageEmailIsTriggeredAppropriately(mock_requests):
     # Arrange
     monitor = ApiMonitor(url, sleep_time=0.1)
@@ -71,10 +71,10 @@ def test_outageEmailIsTriggeredAppropriately(mock_requests):
     thread.join()
     
     # Assert
-    email_service.assert_called_once_with(monitor.email_address, monitor.fail_message)
+    email_service.assert_called_once_with(monitor.recipient, monitor.fail_message, monitor.fail_message)
 
 @patch('ApiMonitor.requests.get', 
-        side_effect=[bad_resp, bad_resp, bad_resp, bad_resp, bad_resp, good_resp, good_resp, good_resp])
+        side_effect=[bad_resp, bad_resp, bad_resp]+[good_resp for _ in range(100)])
 def test_recoveryEmailIsTriggeredAppropriately(mock_requests):
     # Arrange
     monitor = ApiMonitor(url, sleep_time=0.1)
@@ -89,4 +89,6 @@ def test_recoveryEmailIsTriggeredAppropriately(mock_requests):
     thread.join()
     
     # Assert
-    email_service.assert_has_calls([mock.call(monitor.email_address, monitor.fail_message), mock.call(monitor.email_address, monitor.recovery_message)])
+    email_service.assert_has_calls(
+        [mock.call(monitor.recipient, monitor.fail_message, monitor.fail_message), 
+         mock.call(monitor.recipient, monitor.recovery_message, monitor.recovery_message)])
