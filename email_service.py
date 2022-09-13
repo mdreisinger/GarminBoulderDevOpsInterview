@@ -1,3 +1,6 @@
+"""
+Send an email using boto3.
+"""
 import boto3
 from botocore.exceptions import ClientError
 
@@ -42,9 +45,9 @@ def email_service(recipient, subject, body_text):
             },
             Source=SENDER
         )
-    # Display an error if something goes wrong.	
-    except ClientError as e:
-        print(e.response['Error']['Message'])
+    # Display an error if something goes wrong.
+    except ClientError as error:
+        print(error.response['Error']['Message'])
     else:
-        print("Email sent! Message ID:"),
+        print("Email sent! Message ID:")
         print(response['MessageId'])

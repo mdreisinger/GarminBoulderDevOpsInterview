@@ -1,8 +1,8 @@
 FROM python:latest
 
-COPY ApiMonitor.py ./
-COPY DatabaseConnection.py ./
-COPY EmailService.py ./
+COPY api_monitor.py ./
+COPY database_connection.py ./
+COPY email_service.py ./
 COPY requirements.txt ./
 RUN pip install -r ./requirements.txt
 CMD [ "python", "./ApiMonitor.py", "--support",    \
