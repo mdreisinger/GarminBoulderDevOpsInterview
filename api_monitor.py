@@ -74,6 +74,7 @@ class ApiMonitor: # pylint: disable=too-many-instance-attributes
 
                 if consecutive_changes >= 2:
                     last_state = status
+                    consecutive_changes = 0
                     if status:
                         self.db_conn.insert_row(True)
                         self.send_email(self.email_service,
@@ -82,13 +83,12 @@ class ApiMonitor: # pylint: disable=too-many-instance-attributes
                                         self.build_recovery_body())
                         logging.info("API recovered from outage.")
                     else:
-                        self.db_conn.insert_row(True)
+                        self.db_conn.insert_row(False)
                         self.send_email(self.email_service,
                                         self.recipient,
                                         self.fail_subject,
                                         self.build_outage_body())
-                    consecutive_changes = 0
-
+                                        
                 time.sleep(self.sleep_time)
         except KeyboardInterrupt:
             logging.info("Bye")
