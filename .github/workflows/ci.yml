@@ -76,16 +76,18 @@ jobs:
         container-name: api_monitor
         image: ${{ steps.build-image-mon.outputs.image }}
         
+    - name: (DB)Fill in the new image ID in the Amazon ECS task definition
+      id: task-def-db
+      uses: aws-actions/amazon-ecs-render-task-definition@v1
       with:
         task-definition: task_definition.json
         container-name: garmin_api_state_db
         image: ${{ steps.build-image-db.outputs.image }}
 
-
     - name: Deploy Amazon ECS task definition
       uses: aws-actions/amazon-ecs-deploy-task-definition@v1
       with:
-        task-definition: ${{ steps.task-def.outputs.task-definition }}
+        task-definition: ${{ steps.task-def-db.outputs.task-definition }}
         service: TBD
         cluster: TBD
         wait-for-service-stability: true
