@@ -88,7 +88,7 @@ class ApiMonitor: # pylint: disable=too-many-instance-attributes
                                         self.recipient,
                                         self.fail_subject,
                                         self.build_outage_body())
-                                        
+
                 time.sleep(self.sleep_time)
         except KeyboardInterrupt:
             logging.info("Bye")
