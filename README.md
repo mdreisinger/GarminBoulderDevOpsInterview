@@ -15,6 +15,14 @@ I have broken the requirements down into the following list of acceptance criter
 - Unit tests are required.
 - All assumptions must be documented.
 
+# Description of my solution
+- This app will monitor the API by continuously checking it every 5 seconds.
+- In order to keep track of uptime and downtime, I've created a database with columns (Id, timestamp, healthy)
+- Each time API changes from healthy to unhealthy, or vice versa, an email is sent and a row is added to the database.
+- Before the email is sent, the database is queried to determine the latest outage/uptime length.
+- More metrics could easily be built from the database, such as average uptime over the past 7 days.
+- Some of the optional parts of the challenge were left out on purpose.
+
 # Run Unit Tests
 ```bash
 pytest *.py
@@ -32,3 +40,16 @@ mysql -u root -p # leave password empty
 use garmin_api_state_db;
 select * from state;
 ```
+
+# Run fake API to test monitor
+```bash
+uvicorn fake_api:app --reload
+# to simulate an outage, change the status from OK
+# to something else in fake_api.py
+```
+
+# Continuous Integration
+- This repository has a git CI pipeline here: https://github.com/mdreisinger/GarminBoulderDevOpsInterview/actions/workflows/ci.yml
+- The pipeline runs pylint, runs unit tests, build images, and pushes them to AWS ECR.
+- ApiMonitor image location: https://us-west-2.console.aws.amazon.com/ecr/repositories/public/126493000772/api_monitor?region=us-west-2
+- Database image location: https://us-west-2.console.aws.amazon.com/ecr/repositories/public/126493000772/garmin_api_state_db?region=us-west-2

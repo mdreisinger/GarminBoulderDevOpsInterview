@@ -4,3 +4,4 @@ mysql-connector-python
 
 # Testing
 pytest
+fastapi
