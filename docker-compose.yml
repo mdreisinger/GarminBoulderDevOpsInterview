@@ -1,0 +1,30 @@
+version: "3.9"
+services:
+
+  api_monitor:
+    build: .
+    environment:
+      - SUPPORT=testymctester653@gmail.com
+      - DB_HOST=db
+      - DB_USER=root
+      - DB_PW=password
+      - DB_NAME=garmin_api_state_db
+      - AWS_PROFILE=default
+      - API_URL=https://api.qa.fitpay.ninja/health
+    volumes:
+      - ~/.aws/:/root/.aws:ro
+    depends_on:
+      - "db"
+
+  db:
+    build: ./database
+    ports:
+      - "3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=password
+    healthcheck:
+      test: ["mysqladmin" ,"ping"]
+      interval: 1m30s
+      timeout: 30s
+      retries: 5
+      start_period: 30s

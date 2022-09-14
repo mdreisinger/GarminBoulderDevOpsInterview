@@ -64,8 +64,11 @@ class DatabaseConnection:
         """
 
         result = self.execute(query)
-        return [entry[2] for entry in result if entry[1]==0].pop()
-
+        try:
+            # Create a list of downtimes, return the most recent one.
+            return [entry[2] for entry in result if entry[1]==0].pop()
+        except IndexError:
+            return "Unknown"
 
     def get_downtime(self):
         """
@@ -78,5 +81,9 @@ class DatabaseConnection:
         """
 
         result = self.execute(query)
-        return [entry[2] for entry in result if entry[1]==1].pop()
+        try:
+            # Create a list of downtimes, return the most recent one.
+            return [entry[2] for entry in result if entry[1]==1].pop()
+        except IndexError:
+            return "Unknown"
         

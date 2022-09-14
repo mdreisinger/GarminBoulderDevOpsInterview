@@ -2,8 +2,8 @@
 The main application file.
 """
 
-import argparse
 import logging
+import os
 import sys
 import time
 import requests
@@ -125,16 +125,21 @@ class ApiMonitor: # pylint: disable=too-many-instance-attributes
 
 
 if __name__ == "__main__":
-    API_URL = "https://api.qa.fitpay.ninja/health"
+    api_url = os.getenv('API_URL')
+    support = os.getenv('SUPPORT')
+    db_host = os.getenv('DB_HOST')
+    db_user = os.getenv('DB_USER')
+    db_pw = os.getenv('DB_PW')
+    db_name = os.getenv('DB_NAME')
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--support", help = "The email address to send to.", required=True)
-    parser.add_argument("--db_host", help = "The host of the mysql database.", required=True)
-    parser.add_argument("--db_user", help = "The username for the mysql db.", required=True)
-    parser.add_argument("--db_pw", help = "The password of the mysql db.", required=True)
-    parser.add_argument("--db_name", help = "The name of the mysql db.", required=True)
-    args = parser.parse_args()
+    # pylint: disable=logging-fstring-interpolation
+    logging.info(f"api_url: {api_url}")
+    logging.info(f"support: {support}")
+    logging.info(f"db_host: {db_host}")
+    logging.info(f"db_user: {db_user}")
+    logging.info(f"db_pw: {db_pw}") # what's security?
+    logging.info(f"db_name: {db_name}")
 
-    db = DatabaseConnection(args.db_host, args.db_user, args.db_pw, args.db_name)
-    monitor = ApiMonitor(API_URL, db, args.support)
+    db = DatabaseConnection(db_host, db_user, db_pw, db_name)
+    monitor = ApiMonitor(api_url, db, support)
     monitor.start_monitoring()
