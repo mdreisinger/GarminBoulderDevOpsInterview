@@ -1,5 +1,11 @@
 name: ci
 
+env:
+  ECR_REPOSITORY_MON: api_monitor
+  ECR_REPOSITORY_DB: garmin_api_state_db
+  ECR_REGISTRY: public.ecr.aws/r0v0x0g8
+
+
 permissions:
   contents: read
 
@@ -38,17 +44,29 @@ jobs:
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v1
       with:
-        aws-access-key-id: ${{ secrets.ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.SECRET_ACCESS_KEY }}
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: us-west-1
 
-    - name: Build and push image to ECR
+    - name: Build and push monitor image to ECR
+      id: build-image-mon
       run: |
         aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/r0v0x0g8
         tag=$(date +%s)
         docker build . --tag api_monitor:$tag
         docker tag api_monitor:$tag public.ecr.aws/r0v0x0g8/api_monitor:$tag
         docker push public.ecr.aws/r0v0x0g8/api_monitor:$tag
+        echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$tag"
+
+    - name: Build and push db image to ECR
+      id: build-image-db
+      run: |
+        tag=$(date +%s)
+        cd database
+        docker build . --tag garmin_api_state_db:$tag
+        docker tag garmin_api_state_db:$tag public.ecr.aws/r0v0x0g8/garmin_api_state_db:$tag
+        docker push public.ecr.aws/r0v0x0g8/garmin_api_state_db:$tag
+        echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$tag"
 
     - name: Fill in the new image ID in the Amazon ECS task definition
       id: task-def
@@ -56,7 +74,13 @@ jobs:
       with:
         task-definition: task_definition.json
         container-name: api_monitor
-        image: TBD
+        image: ${{ steps.build-image-mon.outputs.image }}
+        
+      with:
+        task-definition: task_definition.json
+        container-name: garmin_api_state_db
+        image: ${{ steps.build-image-db.outputs.image }}
+
 
     - name: Deploy Amazon ECS task definition
       uses: aws-actions/amazon-ecs-deploy-task-definition@v1
