@@ -107,11 +107,9 @@ class ApiMonitor: # pylint: disable=too-many-instance-attributes
         of the email sent when an outage occurs.
         """
         uptime = self.db_conn.get_uptime()
-        avg_up = self.db_conn.get_average_uptime()
         return f"""
         This is an URGENT email. The API @ {self.url} is DOWN!
         Prior to this outage, the API was up for {uptime}.
-        Average uptime for API over the past 7 days: {avg_up}
         """
 
     def build_recovery_body(self):
@@ -120,11 +118,9 @@ class ApiMonitor: # pylint: disable=too-many-instance-attributes
         of the email sent when the API recovers from an outage.
         """
         downtime = self.db_conn.get_downtime()
-        avg_up = self.db_conn.get_average_uptime()
         return f"""
         The API @ {self.url} has recovered from an outage!
         Prior to this recovery, the API was down for {downtime}.
-        Average uptime for API over the past 7 days: {avg_up}
         """
 
 
@@ -136,8 +132,9 @@ if __name__ == "__main__":
     parser.add_argument("--db_host", help = "The host of the mysql database.", required=True)
     parser.add_argument("--db_user", help = "The username for the mysql db.", required=True)
     parser.add_argument("--db_pw", help = "The password of the mysql db.", required=True)
+    parser.add_argument("--db_name", help = "The name of the mysql db.", required=True)
     args = parser.parse_args()
 
-    db = DatabaseConnection(args.db_host, args.db_user, args.db_pw, )
+    db = DatabaseConnection(args.db_host, args.db_user, args.db_pw, args.db_name)
     monitor = ApiMonitor(API_URL, db, args.support)
     monitor.start_monitoring()

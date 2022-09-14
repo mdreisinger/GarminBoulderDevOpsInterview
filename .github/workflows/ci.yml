@@ -35,9 +35,33 @@ jobs:
       run: |
         pytest --log-cli-level=DEBUG -x
 
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.SECRET_ACCESS_KEY }}
+        aws-region: us-west-1
+
     - name: Build and push image to ECR
       run: |
         aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/r0v0x0g8
-        docker build . --tag database_monitor:$(date +%s)
-        docker tag api_monitor:latest public.ecr.aws/r0v0x0g8/api_monitor:latest
-        docker push public.ecr.aws/r0v0x0g8/api_monitor:latest
+        tag=$(date +%s)
+        docker build . --tag api_monitor:$tag
+        docker tag api_monitor:$tag public.ecr.aws/r0v0x0g8/api_monitor:$tag
+        docker push public.ecr.aws/r0v0x0g8/api_monitor:$tag
+
+    - name: Fill in the new image ID in the Amazon ECS task definition
+      id: task-def
+      uses: aws-actions/amazon-ecs-render-task-definition@v1
+      with:
+        task-definition: task_definition.json
+        container-name: api_monitor
+        image: TBD
+
+    - name: Deploy Amazon ECS task definition
+      uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+      with:
+        task-definition: ${{ steps.task-def.outputs.task-definition }}
+        service: TBD
+        cluster: TBD
+        wait-for-service-stability: true

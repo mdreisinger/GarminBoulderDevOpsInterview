@@ -11,10 +11,11 @@ class DatabaseConnection:
     insert rows into the database and retrieve the necessary data
     to build metrics.
     """
-    def __init__(self, host, user, password):
+    def __init__(self, host, user, password, database_name):
         self.host = host
         self.user = user
         self.password = password
+        self.database_name = database_name
 
     def execute(self, query):
         """
@@ -26,10 +27,12 @@ class DatabaseConnection:
                 host=self.host,
                 user=self.user,
                 password=self.password,
+                database=self.database_name
             ) as connection:
-                with connection.cursor() as cursor:
-                    result = cursor.execute(query)
+                with connection.cursor(buffered=True) as cursor:
+                    cursor.execute(query)
                     connection.commit()
+                    result = cursor.fetchall()
 
         except Error as error:
             logging.critical(error)
@@ -47,22 +50,33 @@ class DatabaseConnection:
         """
         Print everything in the "state" table.
         """
-        print(self.execute("select * from state;"))
+        for row in self.execute("select * from state;"):
+            print(row)
 
     def get_uptime(self):
         """
         Calculate the most recent uptime of the API.
         """
-        return "Uptime is not yet calculated"
+        query = """
+        SELECT timestamp, healthy,
+        TIMEDIFF(timestamp, LAG(timestamp) OVER (ORDER BY id)) AS diff
+        FROM state;
+        """
+
+        result = self.execute(query)
+        return [entry[2] for entry in result if entry[1]==0].pop()
+
 
     def get_downtime(self):
         """
         Calculate the most recent downtime of the API.
         """
-        return "Downtime is not yet calculated"
+        query = """
+        SELECT timestamp, healthy,
+        TIMEDIFF(timestamp, LAG(timestamp) OVER (ORDER BY id)) AS diff
+        FROM state;
+        """
 
-    def get_average_uptime(self):
-        """
-        Calculate the average uptime of the API over the past 7 days.
-        """
-        return "Average uptime is not yet calculated"
+        result = self.execute(query)
+        return [entry[2] for entry in result if entry[1]==1].pop()
+        
