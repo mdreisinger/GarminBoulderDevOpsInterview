@@ -36,7 +36,7 @@ docker-compose up -d
 # Connect to database
 ```bash
 docker exec -it <container id> bash
-mysql -u root -p # leave password empty
+mysql -u root -p # enter 'password' when prompted.
 use garmin_api_state_db;
 select * from state;
 ```
