@@ -106,3 +106,44 @@ def test_recoveryEmailIsTriggeredAppropriately(mock_requests): # pylint: disable
     email_service.assert_has_calls(
         [mock.call(monitor.recipient, monitor.fail_subject, monitor.build_outage_body()),
          mock.call(monitor.recipient, monitor.recovery_subject, monitor.build_recovery_body())])
+
+@patch('api_monitor.requests.get',
+        side_effect=[good_resp, bad_resp, good_resp, bad_resp]+[good_resp for _ in range(100)])
+def test_twoNonConsecutiveChangesDoesNotTriggerStateChange_outage(mock_requests): # pylint: disable=unused-argument
+    # Arrange
+    db = MagicMock()
+    monitor = ApiMonitor(url, db, sleep_time=0.1)
+    email_service = MagicMock()
+    monitor.email_service = email_service
+
+    # Act
+    thread = Thread(target=monitor.start_monitoring)
+    thread.start()
+    time.sleep(1)
+    monitor.monitor = False
+    thread.join()
+
+    # Assert
+    email_service.assert_not_called()
+
+@patch('api_monitor.requests.get',
+        side_effect=[bad_resp, bad_resp, good_resp, bad_resp,
+                     good_resp, bad_resp, bad_resp, good_resp]+[bad_resp for _ in range(100)])
+def test_twoNonConsecutiveChangesDoesNotTriggerStateChange_recovery(mock_requests): # pylint: disable=unused-argument
+    # Arrange
+    db = MagicMock()
+    monitor = ApiMonitor(url, db, sleep_time=0.1)
+    email_service = MagicMock()
+    monitor.email_service = email_service
+
+    # Act
+    thread = Thread(target=monitor.start_monitoring)
+    thread.start()
+    time.sleep(1)
+    monitor.monitor = False
+    thread.join()
+
+    # Assert
+    email_service.assert_called_once_with(monitor.recipient,
+                                          monitor.fail_subject,
+                                          monitor.build_outage_body())

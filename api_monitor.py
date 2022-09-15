@@ -64,17 +64,13 @@ class ApiMonitor: # pylint: disable=too-many-instance-attributes
         and sends emails, and updates the database when the health status of the API changes.
         """
         last_state = True # initialize, assuming API is up
-        consecutive_changes = 0
+        prev_loop_changed = False
 
         try:
             while self.monitor:
                 status = self.get()
-                if status != last_state:
-                    consecutive_changes += 1
-
-                if consecutive_changes >= 2:
+                if status != last_state and prev_loop_changed is True:
                     last_state = status
-                    consecutive_changes = 0
                     if status:
                         self.db_conn.insert_row(True)
                         self.send_email(self.email_service,
@@ -88,6 +84,12 @@ class ApiMonitor: # pylint: disable=too-many-instance-attributes
                                         self.recipient,
                                         self.fail_subject,
                                         self.build_outage_body())
+
+                elif status != last_state and prev_loop_changed is False:
+                    prev_loop_changed = True
+
+                if status == last_state:
+                    prev_loop_changed = False
 
                 time.sleep(self.sleep_time)
         except KeyboardInterrupt:

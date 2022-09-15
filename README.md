@@ -47,6 +47,8 @@ uvicorn fake_api:app --reload
 # to simulate an outage, change the status from OK
 # to something else in fake_api.py
 ```
+Update the docker-compose file to use the fake-api:
+`- API_URL=http://host.docker.internal:8000`
 
 # Continuous Integration
 - This repository has a git CI pipeline here: https://github.com/mdreisinger/GarminBoulderDevOpsInterview/actions/workflows/ci.yml
