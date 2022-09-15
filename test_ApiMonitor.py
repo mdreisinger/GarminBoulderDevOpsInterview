@@ -128,7 +128,7 @@ def test_twoNonConsecutiveChangesDoesNotTriggerStateChange_outage(mock_requests)
 
 @patch('api_monitor.requests.get',
         side_effect=[bad_resp, bad_resp, good_resp, bad_resp,
-                     good_resp, bad_resp, bad_resp, good_resp]+[bad_resp for _ in range(100)])
+                     good_resp, bad_resp, good_resp, bad_resp]+[bad_resp for _ in range(100)])
 def test_twoNonConsecutiveChangesDoesNotTriggerStateChange_recovery(mock_requests): # pylint: disable=unused-argument
     # Arrange
     db = MagicMock()

@@ -64,34 +64,36 @@ class ApiMonitor: # pylint: disable=too-many-instance-attributes
         and sends emails, and updates the database when the health status of the API changes.
         """
         last_state = True # initialize, assuming API is up
-        prev_loop_changed = False
+        change = False
 
         try:
             while self.monitor:
                 status = self.get()
-                if status != last_state and prev_loop_changed is True:
-                    last_state = status
-                    if status:
-                        self.db_conn.insert_row(True)
-                        self.send_email(self.email_service,
-                                        self.recipient,
-                                        self.recovery_subject,
-                                        self.build_recovery_body())
-                        logging.info("API recovered from outage.")
-                    else:
-                        self.db_conn.insert_row(False)
-                        self.send_email(self.email_service,
-                                        self.recipient,
-                                        self.fail_subject,
-                                        self.build_outage_body())
+                if status != last_state:
+                    if change is True: # state change
+                        last_state = status
+                        if status:
+                            self.db_conn.insert_row(True)
+                            self.send_email(self.email_service,
+                                            self.recipient,
+                                            self.recovery_subject,
+                                            self.build_recovery_body())
+                            logging.info("API recovered from outage.")
+                        else:
+                            self.db_conn.insert_row(False)
+                            self.send_email(self.email_service,
+                                            self.recipient,
+                                            self.fail_subject,
+                                            self.build_outage_body())
 
-                elif status != last_state and prev_loop_changed is False:
-                    prev_loop_changed = True
+                    else: # First change
+                        change = True
 
-                if status == last_state:
-                    prev_loop_changed = False
+                if status == last_state: # No change
+                    change = False
 
                 time.sleep(self.sleep_time)
+                
         except KeyboardInterrupt:
             logging.info("Bye")
             sys.exit()
