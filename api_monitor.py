@@ -93,7 +93,7 @@ class ApiMonitor: # pylint: disable=too-many-instance-attributes
                     change = False
 
                 time.sleep(self.sleep_time)
-                
+
         except KeyboardInterrupt:
             logging.info("Bye")
             sys.exit()
